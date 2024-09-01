@@ -1,0 +1,15 @@
+# node modules
+node_modules
+
+# environment variables
+.env
+
+# dist
+dist
+# .vscode
+.vscode
+# coverage
+coverage
+# .nyc_output
+.nyc_output
+# build
