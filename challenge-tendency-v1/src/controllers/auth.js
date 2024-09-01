@@ -56,10 +56,14 @@ import { response } from 'express';
 
 export const register = async(req, res = response) => {
 
-    // const { nombre, correo, password, rol } = req.body;
+    const { name, phone, image_profile } = req.body;
     // const usuario = new Usuario({ nombre, correo, password, rol });
 
-    res.send('register!!')
+    res.send({
+        name,
+        phone,
+        image_profile
+    })
 }
 
 
