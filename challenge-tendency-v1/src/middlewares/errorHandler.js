@@ -21,7 +21,7 @@ export const errorHandler = (err, req, res, next) => {
 
   // Para cualquir otro tipos de error
   return res.status(500).json({
-    status: 'error aqui',
+    status: 'error aqui mierda',
     message: 'Internal Server Error'
   });
 };

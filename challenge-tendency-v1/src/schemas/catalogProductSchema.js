@@ -1,9 +1,9 @@
 import Joi from "joi";
 
 export const catalogProductSchema = Joi.object({
-  name: Joi.string().required(),
-  description: Joi.string().required(),
-  height: Joi.number().required(),
-  length: Joi.number().required(),
-  width: Joi.number().required(),
+  name: Joi.string().strict().required(),
+  description: Joi.string().strict().required(),
+  height: Joi.number().strict().required(),
+  length: Joi.number().strict().required(),
+  width: Joi.number().strict().required(),
 });

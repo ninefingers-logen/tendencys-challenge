@@ -12,8 +12,8 @@ export class Server {
         this.app = express();
         this.port = process.env.PORT;
 
-        // this.productsPath = '/products';
-        this.authPath = '/api/auth';
+        this.productsPath = '/products';
+        this.authPath = '/auth';
 
         // Connect to database
         this.connectDb();
@@ -51,7 +51,7 @@ export class Server {
     routes() {
 
         this.app.use(this.authPath, authRouter);
-        this.app.use(this.productPath, productsRouter);
+        this.app.use(this.productsPath, productsRouter);
         // this.app.use( this.usuariosPath, require('../routes/usuarios'));
     }
 

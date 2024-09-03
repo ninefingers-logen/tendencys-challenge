@@ -1,8 +1,7 @@
 import express from 'express';
 import { register } from '../controllers/auth.js';
-import { validateSchema } from '../middlewares/validateSchema.js';
 import { registerUserSchema } from '../schemas/registerSchema.js';
-
+import { validator } from '../utils/index.js';
 const authRouter = express.Router();
 
 
@@ -11,7 +10,7 @@ const authRouter = express.Router();
  * This route is used to register a new user
  */
 
-authRouter.post('/', validateSchema(registerUserSchema), register);
+authRouter.post('/', validator(registerUserSchema), register);
 
 
 export default authRouter;
