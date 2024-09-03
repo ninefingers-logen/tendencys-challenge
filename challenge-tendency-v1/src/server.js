@@ -1,8 +1,10 @@
 import express, { json } from 'express';
 import cors from 'cors';
-import router from '../routes/auth.js';
+import { dbConnection } from './database/config.js';
+import authRouter from './routes/auth.js';
+import productsRouter from './routes/products.js';
+import { errorHandler } from './middlewares/errorHandler.js';
 
-import { dbConnection } from '../database/config.js';
 
 export class Server {
 
@@ -13,14 +15,16 @@ export class Server {
         // this.productsPath = '/products';
         this.authPath = '/api/auth';
 
-        // Conectar a base de datos
+        // Connect to database
         this.connectDb();
 
         // Middlewares
         this.middlewares();
 
-        // Rutas de mi aplicación
+        // Routes of my app
         this.routes();
+        
+        this.errorMiddleware();
     }
 
     async connectDb() {
@@ -30,13 +34,15 @@ export class Server {
 
     middlewares() {
 
-        // CORS para peticiones de origen cruzado
+
+        // CORS for requests from any origin
         this.app.use(cors());
 
-        // Lectura y parseo del body
+        // Lecture and parsing of the body
         this.app.use(json());
 
-        //  Parsear cuerpos codificados en URL
+        // Parsear cuerpos codificados en URL
+        // Parse incoming URL-encoded bodies
         this.app.use(express.urlencoded({ extended: true, strict: false, }));
 
 
@@ -44,13 +50,18 @@ export class Server {
 
     routes() {
 
-        this.app.use(this.authPath, router);
+        this.app.use(this.authPath, authRouter);
+        this.app.use(this.productPath, productsRouter);
         // this.app.use( this.usuariosPath, require('../routes/usuarios'));
+    }
+
+    errorMiddleware() {
+        this.app.use(errorHandler)
     }
 
     listen() {
         this.app.listen(this.port, () => {
-            console.log('Servidor corriendo en puerto', this.port);
+            console.log('Server running on port: ', this.port);
         });
     }
 

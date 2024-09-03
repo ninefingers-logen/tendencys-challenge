@@ -32,27 +32,27 @@ CREATE TABLE IF NOT EXISTS access_tokens (
 -- My first option was to create a trigger to delete each token exactly one hour after its creation, but in MySQL, triggers do not support dynamic SQL.
 -- So I had to create a stored procedure to schedule the deletion of the token and have it called by the trigger
 
-DELIMITER $$
-CREATE PROCEDURE schedule_token_deletion(IN token_id CHAR(36), IN created_at TIMESTAMP)
-BEGIN
-    SET @delete_time = DATE_ADD(created_at, INTERVAL 3 MINUTE);
-    SET @event_name = CONCAT('delete_token_', REPLACE(token_id, '-', '_'));
-    SET @delete_query = CONCAT('CREATE EVENT IF NOT EXISTS ', @event_name, 
-                               ' ON SCHEDULE AT \'', @delete_time, 
-                               '\' DO DELETE FROM access_tokens WHERE id = \'', token_id, '\'');
-    PREPARE stmt FROM @delete_query;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-END$$
-DELIMITER ;
+-- DELIMITER $$
+-- CREATE PROCEDURE schedule_token_deletion(IN token_id CHAR(36), IN created_at TIMESTAMP)
+-- BEGIN
+--     SET @delete_time = DATE_ADD(created_at, INTERVAL 3 MINUTE);
+--     SET @event_name = CONCAT('delete_token_', REPLACE(token_id, '-', '_'));
+--     SET @delete_query = CONCAT('CREATE EVENT IF NOT EXISTS ', @event_name, 
+--                                ' ON SCHEDULE AT \'', @delete_time, 
+--                                '\' DO DELETE FROM access_tokens WHERE id = \'', token_id, '\'');
+--     PREPARE stmt FROM @delete_query;
+--     EXECUTE stmt;
+--     DEALLOCATE PREPARE stmt;
+-- END$$
+-- DELIMITER ;
 
 
--- the trigger will call the stored procedure
-DELIMITER $$
-CREATE TRIGGER delete_token_after_insert
-AFTER INSERT ON access_tokens
-FOR EACH ROW
-BEGIN
-    CALL schedule_token_deletion(NEW.id, NEW.created_at);
-END$$
-DELIMITER ;
+-- -- the trigger will call the stored procedure
+-- DELIMITER $$
+-- CREATE TRIGGER delete_token_after_insert
+-- AFTER INSERT ON access_tokens
+-- FOR EACH ROW
+-- BEGIN
+--     CALL schedule_token_deletion(NEW.id, NEW.created_at);
+-- END$$
+-- DELIMITER ;

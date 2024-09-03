@@ -1,11 +1,3 @@
-
-
-const validaCampos = require('./validar-campos');
-const validarJWT = require('./validar-jwt');
-const validaRoles = require('./validar-roles');
-
-module.exports = {
-    ...validaCampos,
-    ...validarJWT,
-    ...validaRoles,
-}
+export * from './errorHandler.js';
+export * from './validar-jwt.js';
+// export * from './validar-roles.js';

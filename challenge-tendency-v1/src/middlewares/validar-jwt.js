@@ -1,11 +1,11 @@
-const { response, request } = require('express');
-const jwt = require('jsonwebtoken');
-
-const Usuario = require('../models/usuario');
+import { response, request } from 'express';
+import jwt from 'jsonwebtoken';
 
 
-const validarJWT = async( req = request, res = response, next ) => {
+// TODO: poner esto en las rutas y asi ver si tiene token  y asi se cumplen requerimientos del reto
+export const validarJWT = async( req = request, res = response, next ) => {
 
+    // en ligar del header, buscar si esta en base de datos
     const token = req.header('x-token');
 
     if ( !token ) {
@@ -46,11 +46,4 @@ const validarJWT = async( req = request, res = response, next ) => {
         })
     }
 
-}
-
-
-
-
-module.exports = {
-    validarJWT
 }
