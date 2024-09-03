@@ -15,7 +15,7 @@ export const errorHandler = (err, req, res, next) => {
     return res.status(400).json({
       status: 'error',
       message: 'Validation errorrrrr',
-      details: err.details.map(detail => detail.message) // Muestra los mensajes de error
+      details: err.details.map(detail => detail.message) 
     });
   }
 

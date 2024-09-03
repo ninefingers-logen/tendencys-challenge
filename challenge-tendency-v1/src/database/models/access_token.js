@@ -32,4 +32,4 @@ AccessToken.init({
   timestamps: false
 });
 
-AccessToken.belongsTo(User, { foreignKey: 'user_id' });
+AccessToken.belongsTo(User, { foreignKey: 'user_id', onDelete: 'CASCADE' });

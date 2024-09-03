@@ -1,10 +1,10 @@
 import express from 'express';
 import { catalogProductSchema } from '../schemas/index.js';
-import { validator, validatorCombined } from '../utils/index.js';
-// import {  validarJWT } from '../middlewares/index.js';
-import { createProducts, getProducts } from '../controllers/products.js';
-import { updateProducts } from '../controllers/products.js';
-import { deleteProducts } from '../controllers/products.js';
+import { validator, validatorCombined } from '../utils/validators/joi-validator.js';
+import { createProducts, getProducts, updateProducts, deleteProducts } from '../controllers/products.js';
+import { authMiddleware } from '../middlewares/validar-jwt.js';
+
+// authMiddleware
 
 const productsRouter = express.Router();
 
@@ -12,14 +12,13 @@ const productsRouter = express.Router();
  * GET/products
  */
 
-productsRouter.get('/', getProducts);
-// productsRouter.get('/',validator(catalogProductSchema), getProductsById  );
+productsRouter.get('/', authMiddleware, getProducts);
 
 /**
  * POST/products
  */
 
-productsRouter.post('/', validatorCombined(catalogProductSchema), createProducts);
+productsRouter.post('/', [authMiddleware, validatorCombined(catalogProductSchema)], createProducts);
 
 
 
@@ -27,12 +26,12 @@ productsRouter.post('/', validatorCombined(catalogProductSchema), createProducts
  * PUT/products
  */
 
-productsRouter.put('/:id', validator(catalogProductSchema), updateProducts);
+productsRouter.put('/:id', [authMiddleware, validator(catalogProductSchema)], updateProducts);
 
 /**
  * DELETE/products
  */
 
-productsRouter.delete('/:id', deleteProducts);
+productsRouter.delete('/:id', [authMiddleware], deleteProducts);
 
 export default productsRouter;

@@ -23,7 +23,7 @@ export class Server {
 
         // Routes of my app
         this.routes();
-        
+
         this.errorMiddleware();
     }
 
@@ -52,7 +52,6 @@ export class Server {
 
         this.app.use(this.authPath, authRouter);
         this.app.use(this.productsPath, productsRouter);
-        // this.app.use( this.usuariosPath, require('../routes/usuarios'));
     }
 
     errorMiddleware() {

@@ -25,12 +25,14 @@ CREATE TABLE IF NOT EXISTS access_tokens (
     user_id CHAR(36) NOT NULL,
     token VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 
--- My first option was to create a trigger to delete each token exactly one hour after its creation, but in MySQL, triggers do not support dynamic SQL.
--- So I had to create a stored procedure to schedule the deletion of the token and have it called by the trigger
+-- Mi primera opción era crear un disparador para borrar cada token exactamente una hora después de su creación, pero en MySQL, los trigger y eventos no soportan SQL dinámico.
+-- Así que tuve que crear un procedimiento almacenado para programar la eliminación del token y hacer que fuera llamado por el disparador
+
+-- igualmente me decidi por tratar ese asunto dentro de la logica de la app y no dentro de la base de datos
 
 -- DELIMITER $$
 -- CREATE PROCEDURE schedule_token_deletion(IN token_id CHAR(36), IN created_at TIMESTAMP)

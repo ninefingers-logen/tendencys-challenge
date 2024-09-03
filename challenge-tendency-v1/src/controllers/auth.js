@@ -1,131 +1,72 @@
-// import { request, response } from 'express';
-// import { RegisterUserDto } from '../dto/index.js';
-// import { GeneralError } from '../utils/errors/generalError.js';
-// import { registerService } from '../services/auth.js';
-// import { AccessToken } from '../database/models/access_token.js';
-// import { JwtAdapter } from '../helpers/jwtAdapter.js';
-// import { User } from '../database/models/users.js';
-
-
-// /**
-//  * 
-//  * @param {*} req 
-//  * @param {*} res 
-//  * 
-//  */
-
-
-// export const register = async (req = request, res = response, next) => {
-
-//     const data = req.body
-
-//     try {
-//         // 1. Validar si el usuario ya existe -- este paso no se especifica ya que no se proporciona email y es de sentido comun que los nombres puedan repetirse
-
-//         // 2. Crear usuario en base de datos
-
-//         const newUser = await User.create(data);
-//         console.log("🚀 ~ register ~ newUser:", newUser)
-//         if (!newUser)
-//             return next(GeneralError.internalServer('Failed to create user', error));
-
-//         // 3. Generar token
-
-//         const token = await JwtAdapter.generateToken({ id: newUser.id }, '1h');
-//         console.log("🚀 ~ register ~ token:", token)
-//         if (!token)
-//             return next(GeneralError.internalServer('Failed to generate token', 'JWT error'));
-
-//         // 4. Guardar token en base de datos
-
-//         const newAccessToken = await AccessToken.create({ user_id: newUser.id, token })
-//         console.log("🚀 ~ register ~ newAccessToken:", newAccessToken)
-//         if (!newAccessToken)
-//             return next(GeneralError.internalServer('Failed to create access token', 'Database error'));
-
-//         // 5.  Programar la eliminación del token después de 1 hora de creado
-
-//         const deleteDelay = 60 * 60 * 1000; // 1 hora en milisegundos
-//         scheduleJob(deleteDelay, async () => {
-//             try {
-//                 const deletedCount = await AccessToken.destroy({
-//                     where: { id: newAccessToken.id }
-//                 });
-//                 if (deletedCount > 0) {
-//                     console.log(`Token ${newAccessToken.id} eliminado después de 1 hora`);
-//                 } else {
-//                     console.log(`Token ${newAccessToken.id} no encontrado o ya fue eliminado`);
-//                 }
-//             } catch (error) {
-//                 console.error(`Error al eliminar el token ${newAccessToken.id}:`, error);
-//                 return next(GeneralError.internalServer('Failed to delete access token', error));
-//             }
-//         });
-
-//         return res.json({ newUser });
-
-//     } catch (error) {
-//         return next(GeneralError.internalServer('Error al registrar usuarioaaaa', error));
-//     }
-// }
-
-
-import { request, response } from 'express';
 import { GeneralError } from '../utils/errors/generalError.js';
 import { User } from '../database/models/users.js';
 import { AccessToken } from '../database/models/access_token.js';
 import { JwtAdapter } from '../helpers/jwtAdapter.js';
-import { scheduleJob } from 'node-schedule'; // Asegúrate de importar esta función
+import { scheduleJob } from 'node-schedule';
 
-export const register = async (req = request, res = response, next) => {
-    const data = req.body;
+// node-schedule fue utilizado para programar la eliminación de tokens, ya que es mas preciso con fechas especificas
+
+
+export const register = async (req, res, next) => {
+    const data = req.validProducts || req.validatedData; // Usa los datos validados del middleware
 
     try {
-        // 1. Crear usuario en base de datos
-        const newUser = await User.create(data);
-        if (!newUser) {
-            throw new Error('Failed to create user');
-        }
+        let createdUsers = [];
+        let tokens = [];
 
-        // 2. Generar token
-        const token = await JwtAdapter.generateToken({ id: newUser.id }, '1h');
-        if (!token) {
-            throw new Error('Failed to generate token');
-        }
-
-        // 3. Guardar token en base de datos
-        const newAccessToken = await AccessToken.create({ user_id: newUser.id, token });
-        if (!newAccessToken) {
-            throw new Error('Failed to create access token');
-        }
-
-        // 4. Programar la eliminación del token después de 1 hora de creado
-        // const deleteDelay = 60 * 60 * 1000; // 1 hora en milisegundos
-        const deleteDelay = 10 * 1000; // 5 segundos
-        scheduleJob(new Date(Date.now() + deleteDelay), async () => {
-            try {
-                const deletedCount = await AccessToken.destroy({
-                    where: { id: newAccessToken.id }
-                });
-                if (deletedCount > 0) {
-                    console.log(`Token ${newAccessToken.id} eliminado después de 1 hora`);
-                } else {
-                    console.log(`Token ${newAccessToken.id} no encontrado o ya fue eliminado`);
-                }
-            } catch (error) {
-                console.error(`Error al eliminar el token ${newAccessToken.id}:`, error);
+        // Función para crear un usuario y su token
+        const createUserAndToken = async (userData) => {
+            const newUser = await User.create(userData);
+            if (!newUser) {
+                throw new Error('Failed to create user');
             }
-        });
 
-        // 5. Enviar respuesta
+            const token = await JwtAdapter.generateToken({ id: newUser.id }, '1h'); 
+            if (!token) {
+                throw new Error('Failed to generate token');
+            }
+
+            const newAccessToken = await AccessToken.create({ user_id: newUser.id, token });
+            if (!newAccessToken) {
+                throw new Error('Failed to create access token');
+            }
+
+            // Programar la eliminación del token
+            const deleteDelay = 60 * 60 * 1000; // 1 hora en milisegundos - por motivos didacticos deberia ponerse en 20 segundos para probar
+            scheduleJob(new Date(Date.now() + deleteDelay), async () => {
+                try {
+                    await AccessToken.destroy({ where: { id: newAccessToken.id } });
+                    console.log(`Token ${newAccessToken.id} eliminado después de 1 hora`);
+                } catch (error) {
+                    console.error(`Error al eliminar el token ${newAccessToken.id}:`, error);
+                }
+            });
+
+            return { user: newUser, token };
+        };
+
+        // Manejar registro único o múltiple(bulk)
+        if (Array.isArray(data)) {
+            for (const userData of data) {
+                const result = await createUserAndToken(userData);
+                createdUsers.push(result.user);
+                tokens.push(result.token);
+            }
+        } else {
+            const result = await createUserAndToken(data);
+            createdUsers = [result.user];
+            tokens = [result.token];
+        }
+
+        // Enviar respuesta
         return res.status(201).json({ 
-            message: 'User registered successfully',
-            user: newUser,
-            token: token
+            message: 'User(s) registered successfully',
+            users: createdUsers,
+            tokens: tokens
         });
 
     } catch (error) {
         console.error('Error en el registro:', error);
-        return next(GeneralError.internalServer('Error al registrar usuario', error.message));
+        return next(GeneralError.internalServer('Error al registrar usuario(s)', error.message));
     }
 };

@@ -4,6 +4,8 @@ import { GeneralError } from '../utils/errors/generalError.js';
 
 export const getProducts = async (req = request, res = response, next) => {
     try {
+
+        // Esto es para paginar los datos
         const { limit = 5, offset = 0 } = req.query;
 
         const [total, products] = await Promise.all([
@@ -32,10 +34,10 @@ export const createProducts = async (req, res, next) => {
         let createdProducts;
         
         if (Array.isArray(input)) {
-            // Bulk creation
+            // Creacion de multiples productos
             createdProducts = await CatalogProduct.bulkCreate(req.validProducts);
         } else {
-            // Single product creation
+            // Creacion de un solo producto
             createdProducts = await CatalogProduct.create(input);
         }
         
@@ -77,7 +79,7 @@ export const updateProducts = async (req = request, res = response, next) => {
         // 2. Si no existe, pasa el error al siguiente middleware
         const product = await CatalogProduct.findByPk(id);
         if (product === null)
-            return next(GeneralError.notFound('Product not found - update'));
+            return next(GeneralError.notFound('Product not found'));
         
         // 3. Actualizar el proyecto
         await CatalogProduct.update(data, { where: { id } });
@@ -99,7 +101,7 @@ export const deleteProducts = async (req, res, next) => {
         
         const product = await CatalogProduct.findByPk(id);
         if (!product)
-            return next(GeneralError.notFound('Product not found - delete'));
+            return next(GeneralError.notFound('Product not found'));
         
         
         
